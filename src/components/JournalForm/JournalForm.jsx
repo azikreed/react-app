@@ -1,50 +1,116 @@
-import './JournalForm.css';
+import styles from './JournalForm.module.css';
 import Button from '../Button/Button';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import cn from 'classnames';
 
-function JournalForm({onSubmit}) {
-	const [formValidState, setFormValidState] = useState({
-		title: true,
-		post: true,
-		date: true
-	});
+const INITIAL_STATE = {
+	title: true,
+	post: true,
+	date: true,
+	tag: true
+};
+
+function JournalForm({ onSubmit }) {
+	const [formValidState, setFormValidState] = useState(INITIAL_STATE);
+
+	useEffect(() => {
+		let timerId;
+		if (!formValidState.date || !formValidState.post || !formValidState.title) {
+			timerId = setTimeout(() => {
+				console.log('Очистка состояния');
+				setFormValidState(INITIAL_STATE);
+			}, 2000);
+		}
+		return () => {
+			clearTimeout(timerId);
+		};
+	}, [formValidState]);
 
 	const addJournalItem = (e) => {
 		e.preventDefault();
 		const formData = new FormData(e.target);
 		const formProps = Object.fromEntries(formData);
 		let isFormValid = true;
-		if(!formProps.title?.trim().length) {
-			setFormValidState(state => ({...state, title: false}));
+		if (!formProps.title?.trim().length) {
+			setFormValidState((state) => ({ ...state, title: false }));
 			isFormValid = false;
 		} else {
-			setFormValidState(state => ({...state, title: true}));
+			setFormValidState((state) => ({ ...state, title: true }));
 		}
-		if(!formProps.post?.trim().length) {
-			setFormValidState(state => ({...state,post: false}));
+		if (!formProps.tag?.trim().length) {
+			setFormValidState((state) => ({ ...state, tag: false }));
 			isFormValid = false;
 		} else {
-			setFormValidState(state => ({...state, post: true}));
+			setFormValidState((state) => ({ ...state, tag: true }));
 		}
-		if(!formProps.date) {
-			setFormValidState(state => ({...state, date: false}));
-			isFormValid  = false;
+		if (!formProps.post?.trim().length) {
+			setFormValidState((state) => ({ ...state, post: false }));
+			isFormValid = false;
 		} else {
-			setFormValidState(state => ({...state, date: true}));
+			setFormValidState((state) => ({ ...state, post: true }));
 		}
-		if(!isFormValid) {
+		if (!formProps.date) {
+			setFormValidState((state) => ({ ...state, date: false }));
+			isFormValid = false;
+		} else {
+			setFormValidState((state) => ({ ...state, date: true }));
+		}
+		if (!isFormValid) {
 			return;
 		}
 		onSubmit(formProps);
 	};
 
 	return (
-		<form className='journal-form' onSubmit={addJournalItem}>
-			<input type="text" name='title' style={{border: formValidState.title ? undefined : '1px solid red'}}/>
-			<input type="date" name='date' style={{border: formValidState.date ? undefined : '1px solid red'}}/>
-			<input type="text" name='tag' />
-			<textarea name="post" id="" cols="30" rows="10" style={{border: formValidState.post ? undefined : '1px solid red'}}></textarea>
-			<Button text="Сохранить"/>
+		<form className={styles['journal-form']} onSubmit={addJournalItem}>
+			<div>
+				<input
+					type="text"
+					id="title"
+					name="title"
+					className={cn(styles['input'], {
+						[styles['invalid']]: !formValidState.title
+					})}
+				/>
+			</div>
+			<div className={styles['form-row']}>
+				<label htmlFor="date" className={styles['form-label']}>
+					<img src="/calendar.svg" alt="icon of calendar" />
+					<span>Дата</span>
+				</label>
+				<input
+					type="date"
+					id="date"
+					name="date"
+					className={`${styles['input']} ${
+						formValidState.date ? '' : styles['invalid']
+					}`}
+				/>
+			</div>
+			<div className={styles['form-row']}>
+				<label htmlFor="tag" className={styles['form-label']}>
+					<img src="/folder.svg" alt="icon of folder" />
+					<span>Метки</span>
+				</label>
+				<input
+					type="text"
+					id="tag"
+					name="tag"
+					className={`${styles['input']} ${
+						formValidState.tag ? '' : styles['invalid']
+					}`}
+				/>
+			</div>
+			<textarea
+				name="post"
+				id="post"
+				cols="30"
+				rows="10"
+				className={`${styles['input']} ${
+					formValidState.post ? '' : styles['invalid']
+				}`}
+			></textarea>
+			<Button text="Сохранить" />
 		</form>
 	);
 }
